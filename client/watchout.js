@@ -15,6 +15,10 @@ var values = [{id: 1, x: 10, y: 10},
               {id: 2, x: 20, y: 20}, 
               {id: 3, x: 30, y: 30}, 
               {id: 4, x: 40, y: 40}];
+
+var currentScore = 0;
+var highScore = 0;
+var collisions = 0;
               
 var drag = d3.behavior.drag()
              .on('drag', function(d, i) { 
@@ -39,6 +43,14 @@ var nodes = svg.selectAll('circle').data(values, function(d) { return d.id; })
 // set random starting points
 var onCollision = function() {
   console.log('You collided');
+  highScore = Math.max(highScore, currentScore);
+  currentScore = 0;
+  d3.select('.highscore').selectAll('span').data([highScore]).text( function(d) {
+    return d;
+  });
+  d3.select('.collisions').selectAll('span').data([++collisions]).text( function(d) {
+    return d;
+  });
 };
 
 var checkCollision = function(enemy, collidedCallback) {
@@ -98,10 +110,15 @@ var update = function(vals) {
      .transition().duration(1000).ease('linear')
      .tween('custom', tweenWithCollisionDetection);
 
+  setInterval( function() {
+    // console.log(currentScore);
+    d3.select('.current').selectAll('span').data([currentScore++]).text( function(d) {
+      return d;
+    });
+  }, 50);
+ 
   setTimeout( function() {
     update(vals);
-    // console.log('stepped');
-    // console.log(vals);
   }, 1000);
 };
 
