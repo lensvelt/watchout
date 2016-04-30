@@ -11,15 +11,17 @@ var svg = d3.select('.board')
 
 var heroVal = [{id: 0, x: 250, y: 250}];
 
-var values = [{id: 1, x: 10, y: 10}, 
-              {id: 2, x: 20, y: 20}, 
-              {id: 3, x: 30, y: 30}, 
-              {id: 4, x: 40, y: 40}];
+var values = [{id: 1, x: 10, y: 10, collisionID: null}, 
+              {id: 2, x: 20, y: 20, collisionID: null}, 
+              {id: 3, x: 30, y: 30, collisionID: null}, 
+              {id: 4, x: 40, y: 40, collisionID: null}];
 
 var currentScore = 0;
 var highScore = 0;
 var collisions = 0;
               
+var hasCollided = false;
+
 var drag = d3.behavior.drag()
              .on('drag', function(d, i) { 
               // collision check
@@ -31,24 +33,26 @@ var heroNode = svg.selectAll('circle').data(heroVal, function(d) { return d.id; 
              .attr('cx', function(d, i) { return d.x; })
              .attr('cy', function(d, i) { return d.y; })
              .attr('r', 15)
+             .attr('class', 'hero')
              .call(drag);
 
 var nodes = svg.selectAll('circle').data(values, function(d) { return d.id; })
               .enter().append('circle')
               .attr('cx', function(d, i) { return d.x; })
               .attr('cy', function(d, i) { return d.y; })
-              .attr('r', 25);
+              .attr('r', 25)
+              .style('fill', 'red');
+
 
 // initialize
 // set random starting points
 var onCollision = function() {
-  console.log('You collided');
   highScore = Math.max(highScore, currentScore);
   currentScore = 0;
   d3.select('.highscore').selectAll('span').data([highScore]).text( function(d) {
     return d;
   });
-  d3.select('.collisions').selectAll('span').data([++collisions]).text( function(d) {
+  d3.select('.collisions').selectAll('span').data([collisions++]).text( function(d) {
     return d;
   });
 };
@@ -56,31 +60,33 @@ var onCollision = function() {
 var checkCollision = function(enemy, collidedCallback) {
   
   var r = parseInt(enemy.attr('r')) + parseInt(heroNode.attr('r'));
-  
   var xDiff = Math.pow(enemy.attr('cx') - heroNode.attr('cx'), 2);
   var yDiff = Math.pow(enemy.attr('cy') - heroNode.attr('cy'), 2);
   var dist = Math.sqrt(xDiff + yDiff);
 
-  if (dist < r) {
+  if (!enemy.attr('collisionID') && dist < r) {
+    enemy.attr('collisionID', Math.random());
     onCollision();
+  } else if (dist > r) {
+    enemy.attr('collisionID', null);
   }
 };
  
+
+// what if each collision generated an id? 
 var tweenWithCollisionDetection = function(node) {
-  console.log(node);
-  console.log(this);
 
   var enemy = d3.select(this);
   var startPos = {
     x: parseInt(enemy.attr('cx')),
     y: parseInt(enemy.attr('cy'))
   };
-  console.log('startPos: ', startPos);
+  // console.log('startPos: ', startPos);
   var endPos = {
     x: node.x,
     y: node.y
   };
-  console.log('endPos: ', endPos);
+  // console.log('endPos: ', endPos);
 
   return function(t) {
     checkCollision(enemy, onCollision);
