@@ -1,82 +1,79 @@
-var play = function () {
+let play = () => {
 
-  var h = window.innerHeight;
-  var w = window.innerWidth;
+  let h = window.innerHeight;
+  let w = window.innerWidth;
 
-  var svg = d3.select('.board')
+  let svg = d3.select('.board')
               .append('svg')
               .attr('width', w + 'px')
               .attr('height', h + 'px');
 
-  // debugger;
-  var playerCount = 0;
-  var currentScore = 0;
-  var highScore = 0;
-  var collisions = 0;
-  var enemyCount = 12;
+  let playerCount = 0;
+  let currentScore = 0;
+  let highScore = 0;
+  let collisions = 0;
+  let enemyCount = 24;
+  let colorScheme = ['red', 'yellow', 'blue', 'green'];
 
-  var Player = function(playerID) {
+  let Player = function(playerID) {
     this.id = playerID;
-    // debugger;
     this.x = (w / 2);
     this.y = (h / 2);
+    this.r = 15;
   };
 
-  var Enemy = function(playerID) {
+  let Enemy = function(playerID) {
     this.id = playerID;
     this.x = Math.floor(w * Math.random());
     this.y = Math.floor(h * Math.random());
     this.collisionID = null;
+    this.r = 15;
   };
 
-  var heroVal = [new Player(playerCount)];
-  var enemyVals = [];
+  let heroVal = [new Player(playerCount)];
+  let enemyVals = [];
 
   for (playerCount++; playerCount <= enemyCount; playerCount++) {
     enemyVals.push( new Enemy(playerCount) );
   }
 
-  var drag = d3.behavior.drag()
+  let drag = d3.behavior.drag()
                .on('drag', function(d, i) { 
                  d3.select(this).attr('cx', d3.event.x).attr('cy', d3.event.y);
                });
 
-  var heroNode = svg.selectAll('circle').data(heroVal, function(d) { return d.id; })
+  let heroNode = svg.selectAll('circle').data(heroVal, d => d.id)
                .enter().append('circle')
-               .attr('cx', function(d, i) { return d.x; })
-               .attr('cy', function(d, i) { return d.y; })
-               .attr('r', 15)
+               .attr('cx', d => d.x)
+               .attr('cy', d => d.y)
+               .attr('r', d => d.r)
+               .style('fill', '#fff')
                .call(drag);
-               //  .attr('xlink:href', 'asteroid.png')
+               // .attr('xlink:href', 'asteroid.png')
                // .attr('x', function(d, i) { return d.x; })
                // .attr('y', function(d, i) { return d.y; })
                // .attr('height', '50px')
                // .attr('width', '50px')
 
-  var nodes = svg.selectAll('circle').data(enemyVals, function(d) { return d.id; })
+  let nodes = svg.selectAll('circle').data(enemyVals, d => d.id)
                 .enter().append('circle')
-                .attr('cx', function(d, i) { return d.x; })
-                .attr('cy', function(d, i) { return d.y; })
-                .attr('r', 25)
-                .style('fill', 'red');
+                .attr('cx', d => d.x)
+                .attr('cy', d => d.y)
+                .attr('r', d => Math.max(d.r, Math.floor(Math.random() * 50)))
+                .style('fill', () => colorScheme[ Math.floor(Math.random() * colorScheme.length) ]);
 
-  var onCollision = function() {
+  let onCollision = () => {
     highScore = Math.max(highScore, currentScore);
     currentScore = 0;
-    d3.select('.highscore').selectAll('span').data([highScore]).text( function(d) {
-      return d;
-    });
-    d3.select('.collisions').selectAll('span').data([collisions++]).text( function(d) {
-      return d;
-    });
+    d3.select('.highscore').selectAll('span').data([highScore]).text( d => d );
+    d3.select('.collisions').selectAll('span').data([collisions++]).text( d => d );
   };
 
-  var checkCollision = function(enemy, collidedCallback) {
-    // debugger;
-    var r = parseInt(enemy.attr('r')) + parseInt(heroNode.attr('r'));
-    var xDiff = Math.pow(enemy.attr('cx') - heroNode.attr('cx'), 2);
-    var yDiff = Math.pow(enemy.attr('cy') - heroNode.attr('cy'), 2);
-    var dist = Math.sqrt(xDiff + yDiff);
+  let checkCollision = (enemy, collidedCallback) => {
+    let r = parseInt(enemy.attr('r')) + parseInt(heroNode.attr('r'));
+    let xDiff = Math.pow(enemy.attr('cx') - heroNode.attr('cx'), 2);
+    let yDiff = Math.pow(enemy.attr('cy') - heroNode.attr('cy'), 2);
+    let dist = Math.sqrt(xDiff + yDiff);
 
     if (!enemy.attr('collisionID') && dist < r) {
       enemy.attr('collisionID', Math.random());
@@ -86,23 +83,22 @@ var play = function () {
     }
   };
 
-  // what if each collision generated an id? 
-  var tweenWithCollisionDetection = function(node) {
-    var enemy = d3.select(this);
-    var startPos = {
+  let tweenWithCollisionDetection = function(node) {
+    let enemy = d3.select(this);
+    let startPos = {
       x: parseInt(enemy.attr('cx')),
       y: parseInt(enemy.attr('cy'))
     };
 
-    var endPos = {
+    let endPos = {
       x: node.x,
       y: node.y
     };
 
-    return function(t) {
+    return (t) => {
       checkCollision(enemy, onCollision);
 
-      var enemyNextPos = {
+      let enemyNextPos = {
         x: startPos.x + (endPos.x - startPos.x) * t,
         y: startPos.y + (endPos.y - startPos.y) * t,
       };
@@ -113,36 +109,33 @@ var play = function () {
   };
 
   // randomize enemy placement
-  var relocate = function (val) {
-    val.x = Math.floor(w * Math.random());
-    val.y = Math.floor(h * Math.random());
+  let relocate = val => {
+    console.log(val);
+    val.r = Math.max(15, Math.floor(Math.random() * 50));
+    val.x = Math.min(w - val.r, Math.floor(w * Math.random()));
+    val.y = Math.min(h - val.r, Math.floor(h * Math.random()));
     return val;
   };
 
     // step function/timeout
-  var update = function(svg, vals) {
+  let update = (svg, vals) => {
     vals = vals.map(relocate);
     svg.selectAll('circle')
-       .data(vals, function(d) { return d.id; })
-       .transition().duration(1000).ease('linear')
+       .data(vals, d => d.id)
+       .transition().duration(1250).ease('back')
+       .attr('r', d => d.r)
        .tween('custom', tweenWithCollisionDetection);
 
     setInterval( function() {
-      d3.select('.current').selectAll('span').data([currentScore++]).text( function(d) {
-        return d;
-      });
+      d3.select('.current').selectAll('span').data([currentScore++]).text( d => d);
     }, 50);
 
     setTimeout( function() {
       update(svg, vals);
-    }, 1000);
+    }, 1250);
   };
 
   update(svg, enemyVals);
 };
 
 play();
-
-
-//TODO:
-// skin androids
