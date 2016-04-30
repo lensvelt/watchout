@@ -18,11 +18,7 @@ var values = [{id: 1, x: 10, y: 10},
               
 var drag = d3.behavior.drag()
              .on('drag', function(d, i) { 
-               d.x += d3.event.dx;
-               d.y += d3.event.dy;
-               d3.select(this).attr('transform', function(d, i) {
-                 return 'translate(' + [d.x, d.y] + ')';
-               });
+               d3.select(this).attr('cx', d3.event.x).attr('cy', d3.event.y);
              });
 
 var heroNode = svg.selectAll('circle').data(heroVal, function(d) { return d.id; })
@@ -39,14 +35,9 @@ var nodes = svg.selectAll('circle').data(values, function(d) { return d.id; })
               .attr('cy', function(d, i) { return d.y; })
               .attr('r', 25);
 
-// var initialize = function() {
-//   // generate ids
-//   var count = 0;
-
-//   // set starting points for hero
-  
-//   // set starting points for enemies
-// }
+// initialize
+// set random starting points
+// set random sizes to asteroids
 
 // randomize enemy placement
 var relocate = function (val) {
@@ -79,6 +70,9 @@ heroNode.on('click', function() {
   console.log('clicked!');
 });
 
-// click handler for moving the player
-
+//TODO:
+//Fix dragging behaviour
 // collision detection
+// scoring
+// skin androids
+// initialize function
