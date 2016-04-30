@@ -2,12 +2,13 @@ var play = function () {
 
   var h = window.innerHeight;
   var w = window.innerWidth;
+
   var svg = d3.select('.board')
               .append('svg')
               .attr('width', w + 'px')
-              .attr('height', h + 'px')
-              .style('border', '1px solid red');
+              .attr('height', h + 'px');
 
+  // debugger;
   var playerCount = 0;
   var currentScore = 0;
   var highScore = 0;
@@ -16,8 +17,9 @@ var play = function () {
 
   var Player = function(playerID) {
     this.id = playerID;
-    this.x = h / 2;
-    this.y = w / 2;
+    // debugger;
+    this.x = (w / 2);
+    this.y = (h / 2);
   };
 
   var Enemy = function(playerID) {
@@ -44,8 +46,12 @@ var play = function () {
                .attr('cx', function(d, i) { return d.x; })
                .attr('cy', function(d, i) { return d.y; })
                .attr('r', 15)
-               .attr('class', 'hero')
                .call(drag);
+               //  .attr('xlink:href', 'asteroid.png')
+               // .attr('x', function(d, i) { return d.x; })
+               // .attr('y', function(d, i) { return d.y; })
+               // .attr('height', '50px')
+               // .attr('width', '50px')
 
   var nodes = svg.selectAll('circle').data(enemyVals, function(d) { return d.id; })
                 .enter().append('circle')
@@ -106,7 +112,7 @@ var play = function () {
     };
   };
 
-    // randomize enemy placement
+  // randomize enemy placement
   var relocate = function (val) {
     val.x = Math.floor(w * Math.random());
     val.y = Math.floor(h * Math.random());
