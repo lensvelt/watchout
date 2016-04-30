@@ -1,51 +1,74 @@
 // start slingin' some d3 here.
-
-
 var h = window.innerHeight;
 var w = window.innerWidth;
-var svg = d3.select('.board')
-            .append('svg')
-            .attr('width', w + 'px')
-            .attr('height', h + 'px')
-            .style('border', '1px solid red');
 
-var heroVal = [{id: 0, x: 250, y: 250}];
+var Player = function(playerID) {
+  this.id = playerID;
+  this.x = h / 2;
+  this.y = w / 2;
+};
 
-var values = [{id: 1, x: 10, y: 10, collisionID: null}, 
-              {id: 2, x: 20, y: 20, collisionID: null}, 
-              {id: 3, x: 30, y: 30, collisionID: null}, 
-              {id: 4, x: 40, y: 40, collisionID: null}];
-
-var currentScore = 0;
-var highScore = 0;
-var collisions = 0;
-              
-var hasCollided = false;
-
-var drag = d3.behavior.drag()
-             .on('drag', function(d, i) { 
-              // collision check
-               d3.select(this).attr('cx', d3.event.x).attr('cy', d3.event.y);
-             });
-
-var heroNode = svg.selectAll('circle').data(heroVal, function(d) { return d.id; })
-             .enter().append('circle')
-             .attr('cx', function(d, i) { return d.x; })
-             .attr('cy', function(d, i) { return d.y; })
-             .attr('r', 15)
-             .attr('class', 'hero')
-             .call(drag);
-
-var nodes = svg.selectAll('circle').data(values, function(d) { return d.id; })
-              .enter().append('circle')
-              .attr('cx', function(d, i) { return d.x; })
-              .attr('cy', function(d, i) { return d.y; })
-              .attr('r', 25)
-              .style('fill', 'red');
+var Enemy = function(playerID) {
+  // Player.call(this);
+  this.id = playerID;
+  this.x = Math.floor(w * Math.random());
+  this.y = Math.floor(h * Math.random());
+  this.collisionID = null;
+};
 
 
-// initialize
-// set random starting points
+var play = function() { 
+  var svg = d3.select('.board')
+              .append('svg')
+              .attr('width', w + 'px')
+              .attr('height', h + 'px')
+              .style('border', '1px solid red');
+
+  var playerCount = 0;
+  var currentScore = 0;
+  var highScore = 0;
+  var collisions = 0;
+  var enemyCount = 12;
+
+  var heroVal = new Player(playerCount);
+  var enemyVals = [];
+
+  for (; playerCount <= enemyCount; playerCount++) {
+    enemyVals.push( new Enemy(playerCount) );
+  }
+
+  var drag = d3.behavior.drag()
+               .on('drag', function(d, i) { 
+                 d3.select(this).attr('cx', d3.event.x).attr('cy', d3.event.y);
+               });
+
+  var heroNode = svg.selectAll('circle').data(heroVal, function(d) { return d.id; })
+               .enter().append('circle')
+               .attr('cx', function(d, i) { return d.x; })
+               .attr('cy', function(d, i) { return d.y; })
+               .attr('r', 15)
+               .attr('class', 'hero')
+               .call(drag);
+
+  var nodes = svg.selectAll('circle').data(enemyVals, function(d) { return d.id; })
+                .enter().append('circle')
+                .attr('cx', function(d, i) { return d.x; })
+                .attr('cy', function(d, i) { return d.y; })
+                .attr('r', 25)
+                .style('fill', 'red');
+
+  update(svg, enemyVals);              
+}; 
+
+
+// var heroVal = [{id: 0, x: 250, y: 250}];
+
+// var enemyVals = [{id: 1, x: 10, y: 10, collisionID: null}, 
+//               {id: 2, x: 20, y: 20, collisionID: null}, 
+//               {id: 3, x: 30, y: 30, collisionID: null}, 
+//               {id: 4, x: 40, y: 40, collisionID: null}];           
+
+
 var onCollision = function() {
   highScore = Math.max(highScore, currentScore);
   currentScore = 0;
@@ -71,7 +94,6 @@ var checkCollision = function(enemy, collidedCallback) {
     enemy.attr('collisionID', null);
   }
 };
- 
 
 // what if each collision generated an id? 
 var tweenWithCollisionDetection = function(node) {
@@ -81,12 +103,11 @@ var tweenWithCollisionDetection = function(node) {
     x: parseInt(enemy.attr('cx')),
     y: parseInt(enemy.attr('cy'))
   };
-  // console.log('startPos: ', startPos);
+
   var endPos = {
     x: node.x,
     y: node.y
   };
-  // console.log('endPos: ', endPos);
 
   return function(t) {
     checkCollision(enemy, onCollision);
@@ -109,7 +130,7 @@ var relocate = function (val) {
 };
 
 // step function/timeout
-var update = function(vals) {
+var update = function(svg, vals) {
   vals = vals.map(relocate);
   svg.selectAll('circle')
      .data(vals, function(d) { return d.id; })
@@ -117,34 +138,19 @@ var update = function(vals) {
      .tween('custom', tweenWithCollisionDetection);
 
   setInterval( function() {
-    // console.log(currentScore);
     d3.select('.current').selectAll('span').data([currentScore++]).text( function(d) {
       return d;
     });
   }, 50);
  
   setTimeout( function() {
-    update(vals);
+    update(svg, vals);
   }, 1000);
 };
 
-// update as you're dragging
-// must constantly check location of enemy objects and protagonist w/in a tolerance 
-// must trigger when positions coincide
+play();
 
-  
-
-    // set random sizes to asteroids 
-// reset score
-
-
-
-
-
-update(values);
 
 //TODO:
-// collision detection
-// scoring
 // skin androids
 // initialize function
